@@ -342,10 +342,11 @@ async def global_exception_handler(request, exc):
 
 if __name__ == "__main__":
     # Run the application
+    port = int(os.getenv("PORT", 8000))
     uvicorn.run(
         "api:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,
+        port=port,
+        reload=False,  # Disable reload in production
         log_level="info"
     )
