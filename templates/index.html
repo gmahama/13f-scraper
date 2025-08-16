@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>13F Filing Scraper</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .nav-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 40px;
+        }
+
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-option input[type="radio"] {
+            width: auto;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-right: 15px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
+        }
+
+        .btn-secondary:hover {
+            box-shadow: 0 10px 20px rgba(149, 165, 166, 0.3);
+        }
+
+        .results {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .results-table th {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .results-table td {
+            padding: 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .file-links {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .file-links h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .file-links a {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .file-links a:hover {
+            background: #2980b9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .info-box {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box h3 {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #0c5460;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            color: #0c5460;
+            margin-left: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>13F Filing Scraper</h1>
+            <p>Extract and analyze SEC 13F-HR filings with first-time filer detection</p>
+            <div class="nav-links">
+                <a href="/" class="nav-link">🏠 Main Interface</a>
+                <a href="/demo" class="nav-link">🎯 Demo Mode</a>
+                <a href="/docs" class="nav-link" target="_blank">📚 API Docs</a>
+                <a href="/health" class="nav-link" target="_blank">💚 Health Check</a>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="info-box">
+                <h3>ℹ️ How to Use</h3>
+                <p>This tool scrapes SEC 13F-HR filings and detects first-time filers. Before using:</p>
+                <ul>
+                    <li><strong>Set SEC_USER_AGENT</strong> environment variable with your contact info</li>
+                    <li>Choose input method: fund names, CIKs, or CSV file</li>
+                    <li>Select target quarter and apply filters as needed</li>
+                    <li>Results include holdings data and downloadable files</li>
+                </ul>
+                <p><strong>Note:</strong> The tool respects SEC rate limits and may take several minutes for large requests.</p>
+            </div>
+
+            <form id="scrapeForm">
+                <div class="form-section">
+                    <h2>Input Options</h2>
+                    
+                    <div class="input-group">
+                        <label>Input Method:</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="funds" name="inputMethod" value="funds" checked>
+                                <label for="funds">Fund Names</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="ciks" name="inputMethod" value="ciks">
+                                <label for="ciks">CIKs</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="csv" name="inputMethod" value="csv">
+                                <label for="csv">CSV File</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-group" id="fundsInput">
+                        <label for="fundNames">Fund Names (one per line):</label>
+                        <textarea id="fundNames" rows="4" placeholder="Citadel Advisors&#10;AQR Capital Management&#10;Bridgewater Associates"></textarea>
+                    </div>
+
+                    <div class="input-group" id="ciksInput" style="display: none;">
+                        <label for="cikNumbers">CIK Numbers (one per line):</label>
+                        <textarea id="cikNumbers" rows="4" placeholder="0001167483&#10;0001056903&#10;0001350694"></textarea>
+                    </div>
+
+                    <div class="input-group" id="csvInput" style="display: none;">
+                        <label for="csvFile">CSV File:</label>
+                        <input type="file" id="csvFile" accept=".csv">
+                        <small>CSV should have columns: name, cik</small>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Scraping Options</h2>
+                    
+                    <div class="input-group">
+                        <label for="quarter">Target Quarter:</label>
+                        <select id="quarter">
+                            <option value="">Latest Available</option>
+                            <option value="2025Q2">2025 Q2</option>
+                            <option value="2025Q1">2025 Q1</option>
+                            <option value="2024Q4">2024 Q4</option>
+                            <option value="2024Q3">2024 Q3</option>
+                            <option value="2024Q2">2024 Q2</option>
+                            <option value="2024Q1">2024 Q1</option>
+                        </select>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="onlyFirstTime">
+                        <label for="onlyFirstTime">Only First-Time Filers</label>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2>Holdings Filters</h2>
+                    
+                    <div class="holdings-filters">
+                        <h3>Filter Method 1: Min/Max Holdings</h3>
+                        <div class="filter-method" id="minMaxMethod">
+                            <div class="filters">
+                                <div class="input-group">
+                                    <label for="minHoldings">Minimum Holdings:</label>
+                                    <input type="number" id="minHoldings" min="0" placeholder="0">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label for="maxHoldings">Maximum Holdings:</label>
+                                    <input type="number" id="maxHoldings" min="0" placeholder="No limit">
+                                </div>
+                            </div>
+                            <small>Leave both empty for no filtering</small>
+                        </div>
+                        
+                        <h3>Filter Method 2: Holdings Range</h3>
+                        <div class="filter-method" id="rangeMethod">
+                            <div class="input-group">
+                                <label>Holdings Range:</label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="number" id="rangeMin" min="0" placeholder="Min" style="flex: 1;">
+                                    <span style="color: #7f8c8d;">to</span>
+                                    <input type="number" id="rangeMax" min="0" placeholder="Max" style="flex: 1;">
+                                </div>
+                            </div>
+                            <small>Enter both values to filter funds within this range</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <button type="submit" class="btn">🚀 Start Scraping</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">🗑️ Clear Form</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='/demo'">🎯 Try Demo Mode</button>
+                </div>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing your request... This may take a few minutes.</p>
+            </div>
+
+            <div class="error" id="error"></div>
+            <div class="success" id="success"></div>
+
+            <div class="results" id="results">
+                <h2>Results</h2>
+                
+                <div class="stats" id="stats"></div>
+                
+                <div class="file-links" id="fileLinks"></div>
+                
+                <table class="results-table" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Fund Name</th>
+                            <th>CIK</th>
+                            <th>Period</th>
+                            <th>First Time</th>
+                            <th>Holdings</th>
+                            <th>Period End</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle input method changes
+        document.querySelectorAll('input[name="inputMethod"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const method = this.value;
+                
+                // Hide all input sections
+                document.getElementById('fundsInput').style.display = 'none';
+                document.getElementById('ciksInput').style.display = 'none';
+                document.getElementById('csvInput').style.display = 'none';
+                
+                // Show selected input section
+                document.getElementById(method + 'Input').style.display = 'block';
+            });
+        });
+
+        // Form submission
+        document.getElementById('scrapeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = getFormData();
+            if (!formData) return;
+            
+            await scrapeFilings(formData);
+        });
+
+        function getFormData() {
+            const inputMethod = document.querySelector('input[name="inputMethod"]:checked').value;
+            const quarter = document.getElementById('quarter').value;
+            const onlyFirstTime = document.getElementById('onlyFirstTime').checked;
+            const minHoldings = document.getElementById('minHoldings').value;
+            const maxHoldings = document.getElementById('maxHoldings').value;
+            const rangeMin = document.getElementById('rangeMin').value;
+            const rangeMax = document.getElementById('rangeMax').value;
+            
+            let requestData = {
+                quarter: quarter || null,
+                only_first_time: onlyFirstTime,
+                min_holdings: null,
+                max_holdings: null,
+                between_holdings: null
+            };
+            
+            // Handle holdings filters - prioritize range if both are set
+            if (rangeMin && rangeMax) {
+                if (parseInt(rangeMin) >= parseInt(rangeMax)) {
+                    showError('Range minimum must be less than range maximum');
+                    return null;
+                }
+                requestData.between_holdings = [parseInt(rangeMin), parseInt(rangeMax)];
+            } else {
+                if (minHoldings) {
+                    requestData.min_holdings = parseInt(minHoldings);
+                }
+                if (maxHoldings) {
+                    requestData.max_holdings = parseInt(maxHoldings);
+                }
+            }
+            
+            switch (inputMethod) {
+                case 'funds':
+                    const fundNames = document.getElementById('fundNames').value.trim().split('\n').filter(name => name.trim());
+                    if (fundNames.length === 0) {
+                        showError('Please enter at least one fund name');
+                        return null;
+                    }
+                    requestData.funds = fundNames;
+                    break;
+                    
+                case 'ciks':
+                    const ciks = document.getElementById('cikNumbers').value.trim().split('\n').filter(cik => cik.trim());
+                    if (ciks.length === 0) {
+                        showError('Please enter at least one CIK');
+                        return null;
+                    }
+                    requestData.ciks = ciks;
+                    break;
+                    
+                case 'csv':
+                    const fileInput = document.getElementById('csvFile');
+                    if (!fileInput.files[0]) {
+                        showError('Please select a CSV file');
+                        return null;
+                    }
+                    // For CSV, we'll need to handle file upload differently
+                    showError('CSV file upload not yet implemented in frontend');
+                    return null;
+            }
+            
+            return requestData;
+        }
+
+        // Add visual feedback for holdings filter methods
+        function updateFilterMethodVisuals() {
+            const minHoldings = document.getElementById('minHoldings').value;
+            const maxHoldings = document.getElementById('maxHoldings').value;
+            const rangeMin = document.getElementById('rangeMin').value;
+            const rangeMax = document.getElementById('rangeMax').value;
+            
+            const minMaxMethod = document.getElementById('minMaxMethod');
+            const rangeMethod = document.getElementById('rangeMethod');
+            
+            // Check which method has values
+            const hasMinMax = minHoldings || maxHoldings;
+            const hasRange = rangeMin && rangeMax;
+            
+            if (hasRange) {
+                // Range method is active
+                rangeMethod.classList.add('active');
+                rangeMethod.classList.remove('inactive');
+                minMaxMethod.classList.add('inactive');
+                minMaxMethod.classList.remove('active');
+            } else if (hasMinMax) {
+                // Min/Max method is active
+                minMaxMethod.classList.add('active');
+                minMaxMethod.classList.remove('inactive');
+                rangeMethod.classList.add('inactive');
+                rangeMethod.classList.remove('active');
+            } else {
+                // No filters active
+                minMaxMethod.classList.remove('active', 'inactive');
+                rangeMethod.classList.remove('active', 'inactive');
+            }
+        }
+
+        // Add event listeners for holdings filter inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            const holdingsInputs = ['minHoldings', 'maxHoldings', 'rangeMin', 'rangeMax'];
+            holdingsInputs.forEach(id => {
+                document.getElementById(id).addEventListener('input', updateFilterMethodVisuals);
+            });
+        });
+
+        async function scrapeFilings(data) {
+            showLoading(true);
+            hideError();
+            hideSuccess();
+            hideResults();
+            
+            try {
+                const response = await fetch('/scrape', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess(`Successfully processed ${result.total_funds_processed} funds`);
+                    displayResults(result);
+                } else {
+                    showError('Scraping failed: ' + result.message);
+                }
+                
+            } catch (error) {
+                showError('Error: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function displayResults(result) {
+            const resultsDiv = document.getElementById('results');
+            const statsDiv = document.getElementById('stats');
+            const fileLinksDiv = document.getElementById('fileLinks');
+            const resultsBody = document.getElementById('resultsBody');
+            
+            // Display statistics
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${result.total_funds_processed}</div>
+                    <div class="stat-label">Funds Processed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${result.total_first_time_filers}</div>
+                    <div class="stat-label">First-Time Filers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${result.summary.reduce((sum, s) => sum + s.num_holdings, 0).toLocaleString()}</div>
+                    <div class="stat-label">Total Holdings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${(result.execution_time).toFixed(2)}s</div>
+                    <div class="stat-label">Execution Time</div>
+                </div>
+            `;
+            
+            // Display file links
+            if (result.holdings_files && result.holdings_files.length > 0) {
+                fileLinksDiv.innerHTML = `
+                    <h3>Generated Files</h3>
+                    ${result.holdings_files.map(file => 
+                        `<a href="/files/${file.split('/').pop()}" target="_blank">📄 ${file.split('/').pop()}</a>`
+                    ).join('')}
+                `;
+            } else {
+                fileLinksDiv.innerHTML = '';
+            }
+            
+            // Display results table
+            resultsBody.innerHTML = result.summary.map(summary => `
+                <tr>
+                    <td>${summary.fund_name}</td>
+                    <td>${summary.cik}</td>
+                    <td>${summary.period}</td>
+                    <td>${summary.is_first_time_filer ? '✅ Yes' : '❌ No'}</td>
+                    <td>${summary.num_holdings.toLocaleString()}</td>
+                    <td>${summary.period_end || 'N/A'}</td>
+                </tr>
+            `).join('');
+            
+            showResults();
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            loading.style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.style.display = 'block';
+        }
+
+        function hideError() {
+            document.getElementById('error').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const success = document.getElementById('success');
+            success.textContent = message;
+            success.style.display = 'block';
+        }
+
+        function hideSuccess() {
+            document.getElementById('success').style.display = 'none';
+        }
+
+        function showResults() {
+            document.getElementById('results').classList.add('show');
+        }
+
+        function hideResults() {
+            document.getElementById('results').classList.remove('show');
+        }
+
+        function clearForm() {
+            document.getElementById('scrapeForm').reset();
+            hideError();
+            hideSuccess();
+            hideResults();
+            document.getElementById('fundsInput').style.display = 'block';
+            document.getElementById('ciksInput').style.display = 'none';
+            document.getElementById('csvInput').style.display = 'none';
+            
+            // Also clear the range inputs explicitly
+            document.getElementById('rangeMin').value = '';
+            document.getElementById('rangeMax').value = '';
+        }
+
+        // Initialize with funds input visible
+        document.getElementById('fundsInput').style.display = 'block';
+    </script>
+</body>
+</html>

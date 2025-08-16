@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>13F Filing Scraper - Demo</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .demo-banner {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .demo-banner h2 {
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+        }
+        
+        .demo-banner p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .demo-actions {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .demo-actions button {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .sample-data {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .sample-data h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .sample-data pre {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>13F Filing Scraper - Demo Mode</h1>
+            <p>Explore the tool's capabilities with sample data</p>
+        </div>
+
+        <div class="content">
+            <div class="demo-banner">
+                <h2>🎯 Demo Mode Active</h2>
+                <p>This page shows sample results to demonstrate the tool's functionality without making actual API calls.</p>
+            </div>
+
+            <div class="demo-actions">
+                <button class="btn" onclick="showSampleResults()">📊 Show Sample Results</button>
+                <button class="btn btn-secondary" onclick="showSampleAPI()">🔌 Sample API Response</button>
+                <button class="btn btn-secondary" onclick="showSampleCSV()">📁 Sample CSV Output</button>
+                <button class="btn btn-secondary" onclick="window.location.href='/'">🏠 Back to Main Interface</button>
+            </div>
+
+            <div class="results" id="demoResults">
+                <h2>Sample Results</h2>
+                
+                <div class="stats" id="demoStats"></div>
+                
+                <div class="file-links" id="demoFileLinks"></div>
+                
+                <table class="results-table" id="demoResultsTable">
+                    <thead>
+                        <tr>
+                            <th>Fund Name</th>
+                            <th>CIK</th>
+                            <th>Period</th>
+                            <th>First Time</th>
+                            <th>Holdings</th>
+                            <th>Period End</th>
+                        </tr>
+                    </thead>
+                    <tbody id="demoResultsBody">
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="sample-data" id="sampleAPI" style="display: none;">
+                <h3>Sample API Response</h3>
+                <pre id="apiResponse"></pre>
+            </div>
+
+            <div class="sample-data" id="sampleCSV" style="display: none;">
+                <h3>Sample CSV Output</h3>
+                <pre id="csvOutput"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for demonstration
+        const sampleData = {
+            success: true,
+            message: "Successfully processed 5 funds (Demo Mode)",
+            summary: [
+                {
+                    fund_name: "Citadel Advisors",
+                    cik: "0001167483",
+                    period: "2024Q4",
+                    period_end: "2024-12-31",
+                    is_first_time_filer: false,
+                    num_holdings: 1250,
+                    filing_url: "https://www.sec.gov/Archives/edgar/data/0001167483/0001167483-24-000001.txt",
+                    info_table_url: "https://www.sec.gov/Archives/edgar/data/0001167483/0001167483-24-000001-info.xml"
+                },
+                {
+                    fund_name: "AQR Capital Management",
+                    cik: "0001056903",
+                    period: "2024Q4",
+                    period_end: "2024-12-31",
+                    is_first_time_filer: false,
+                    num_holdings: 890,
+                    filing_url: "https://www.sec.gov/Archives/edgar/data/0001056903/0001056903-24-000001.txt",
+                    info_table_url: "https://www.sec.gov/Archives/edgar/data/0001056903/0001056903-24-000001-info.xml"
+                },
+                {
+                    fund_name: "Bridgewater Associates",
+                    cik: "0001350694",
+                    period: "2024Q4",
+                    period_end: "2024-12-31",
+                    is_first_time_filer: false,
+                    num_holdings: 1560,
+                    filing_url: "https://www.sec.gov/Archives/edgar/data/0001350694/0001350694-24-000001.txt",
+                    info_table_url: "https://www.sec.gov/Archives/edgar/data/0001350694/0001350694-24-000001-info.xml"
+                },
+                {
+                    fund_name: "Two Sigma Investments",
+                    cik: "0001040279",
+                    period: "2024Q4",
+                    period_end: "2024-12-31",
+                    is_first_time_filer: true,
+                    num_holdings: 420,
+                    filing_url: "https://www.sec.gov/Archives/edgar/data/0001040279/0001040279-24-000001.txt",
+                    info_table_url: "https://www.sec.gov/Archives/edgar/data/0001040279/0001040279-24-000001-info.xml"
+                },
+                {
+                    fund_name: "Renaissance Technologies",
+                    cik: "0001029159",
+                    period: "2024Q4",
+                    period_end: "2024-12-31",
+                    is_first_time_filer: false,
+                    num_holdings: 780,
+                    filing_url: "https://www.sec.gov/Archives/edgar/data/0001029159/0001029159-24-000001.txt",
+                    info_table_url: "https://www.sec.gov/Archives/edgar/data/0001029159/0001029159-24-000001-info.xml"
+                }
+            ],
+            holdings_files: [
+                "./output/0001167483_2024Q4_holdings.csv",
+                "./output/0001167483_2024Q4_holdings.jsonl",
+                "./output/0001056903_2024Q4_holdings.csv",
+                "./output/0001056903_2024Q4_holdings.jsonl"
+            ],
+            total_funds_processed: 5,
+            total_first_time_filers: 1,
+            execution_time: 12.45
+        };
+
+        function showSampleResults() {
+            displayResults(sampleData);
+            document.getElementById('demoResults').classList.add('show');
+            document.getElementById('sampleAPI').style.display = 'none';
+            document.getElementById('sampleCSV').style.display = 'none';
+        }
+
+        function showSampleAPI() {
+            document.getElementById('apiResponse').textContent = JSON.stringify(sampleData, null, 2);
+            document.getElementById('sampleAPI').style.display = 'block';
+            document.getElementById('sampleCSV').style.display = 'none';
+            document.getElementById('demoResults').classList.remove('show');
+        }
+
+        function showSampleCSV() {
+            const csvContent = `fund_name,cik,period,period_end,is_first_time_filer,num_holdings,filing_url,info_table_url
+Citadel Advisors,0001167483,2024Q4,2024-12-31,false,1250,https://www.sec.gov/Archives/edgar/data/0001167483/0001167483-24-000001.txt,https://www.sec.gov/Archives/edgar/data/0001167483/0001167483-24-000001-info.xml
+AQR Capital Management,0001056903,2024Q4,2024-12-31,false,890,https://www.sec.gov/Archives/edgar/data/0001056903/0001056903-24-000001.txt,https://www.sec.gov/Archives/edgar/data/0001056903/0001056903-24-000001-info.xml
+Bridgewater Associates,0001350694,2024Q4,2024-12-31,false,1560,https://www.sec.gov/Archives/edgar/data/0001350694/0001350694-24-000001.txt,https://www.sec.gov/Archives/edgar/data/0001350694/0001350694-24-000001-info.xml
+Two Sigma Investments,0001040279,2024Q4,2024-12-31,true,420,https://www.sec.gov/Archives/edgar/data/0001040279/0001040279-24-000001.txt,https://www.sec.gov/Archives/edgar/data/0001040279/0001040279-24-000001-info.xml
+Renaissance Technologies,0001029159,2024Q4,2024-12-31,false,780,https://www.sec.gov/Archives/edgar/data/0001029159/0001029159-24-000001.txt,https://www.sec.gov/Archives/edgar/data/0001029159/0001029159-24-000001-info.xml`;
+            
+            document.getElementById('csvOutput').textContent = csvContent;
+            document.getElementById('sampleCSV').style.display = 'block';
+            document.getElementById('sampleAPI').style.display = 'none';
+            document.getElementById('demoResults').classList.remove('show');
+        }
+
+        function displayResults(result) {
+            const statsDiv = document.getElementById('demoStats');
+            const fileLinksDiv = document.getElementById('demoFileLinks');
+            const resultsBody = document.getElementById('demoResultsBody');
+            
+            // Display statistics
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${result.total_funds_processed}</div>
+                    <div class="stat-label">Funds Processed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${result.total_first_time_filers}</div>
+                    <div class="stat-label">First-Time Filers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${result.summary.reduce((sum, s) => sum + s.num_holdings, 0).toLocaleString()}</div>
+                    <div class="stat-label">Total Holdings</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${(result.execution_time).toFixed(2)}s</div>
+                    <div class="stat-label">Execution Time</div>
+                </div>
+            `;
+            
+            // Display file links
+            if (result.holdings_files && result.holdings_files.length > 0) {
+                fileLinksDiv.innerHTML = `
+                    <h3>Generated Files (Demo)</h3>
+                    ${result.holdings_files.map(file => 
+                        `<span class="file-link">📄 ${file.split('/').pop()}</span>`
+                    ).join('')}
+                    <p><em>Note: These are demo file paths. Actual files would be downloadable.</em></p>
+                `;
+            } else {
+                fileLinksDiv.innerHTML = '';
+            }
+            
+            // Display results table
+            resultsBody.innerHTML = result.summary.map(summary => `
+                <tr>
+                    <td>${summary.fund_name}</td>
+                    <td>${summary.cik}</td>
+                    <td>${summary.period}</td>
+                    <td>${summary.is_first_time_filer ? '✅ Yes' : '❌ No'}</td>
+                    <td>${summary.num_holdings.toLocaleString()}</td>
+                    <td>${summary.period_end || 'N/A'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Auto-show sample results on page load
+        window.addEventListener('load', function() {
+            setTimeout(showSampleResults, 500);
+        });
+    </script>
+</body>
+</html>

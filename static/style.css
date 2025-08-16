@@ -1,0 +1,293 @@
+/* Additional styles for the 13F Filing Scraper frontend */
+
+/* Holdings filter styling */
+.holdings-filters {
+    border: 2px solid #ecf0f1;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.holdings-filters h3 {
+    margin-bottom: 15px;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.filter-method {
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.filter-method.active {
+    border-color: #3498db;
+    background: #f8f9fa;
+}
+
+.filter-method.inactive {
+    opacity: 0.6;
+    background: #f8f9fa;
+}
+
+.filter-method label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.filter-method input {
+    margin-bottom: 10px;
+}
+
+.filter-method small {
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+/* Enhanced button styles */
+.btn-danger {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.btn-danger:hover {
+    box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+}
+
+/* File upload styling */
+.file-upload {
+    border: 2px dashed #bdc3c7;
+    border-radius: 8px;
+    padding: 40px;
+    text-align: center;
+    transition: border-color 0.3s ease;
+    cursor: pointer;
+}
+
+.file-upload:hover {
+    border-color: #3498db;
+}
+
+.file-upload.dragover {
+    border-color: #3498db;
+    background: #ecf0f1;
+}
+
+/* Progress bar */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #ecf0f1;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Tooltip */
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Responsive improvements */
+@media (max-width: 480px) {
+    .container {
+        margin: 10px;
+        border-radius: 8px;
+    }
+    
+    .content {
+        padding: 20px 15px;
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 10px;
+        margin-right: 0;
+    }
+    
+    .filters {
+        grid-template-columns: 1fr;
+    }
+    
+    .radio-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    }
+    
+    .container {
+        background: #2c3e50;
+        color: #ecf0f1;
+    }
+    
+    .form-section h2 {
+        color: #ecf0f1;
+        border-bottom-color: #34495e;
+    }
+    
+    .input-group label {
+        color: #ecf0f1;
+    }
+    
+    .input-group input, .input-group select, .input-group textarea {
+        background: #34495e;
+        color: #ecf0f1;
+        border-color: #7f8c8d;
+    }
+    
+    .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+        border-color: #3498db;
+    }
+    
+    .results-table {
+        background: #34495e;
+    }
+    
+    .results-table td {
+        border-bottom-color: #7f8c8d;
+    }
+    
+    .results-table tr:hover {
+        background: #34495e;
+    }
+    
+    .stat-card {
+        background: #34495e;
+        color: #ecf0f1;
+    }
+    
+    .file-links {
+        background: #34495e;
+    }
+    
+    .file-links h3 {
+        color: #ecf0f1;
+    }
+}
+
+/* Animation for results */
+.results.show {
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced table styling */
+.results-table {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.results-table th {
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.9rem;
+}
+
+.results-table td {
+    transition: background-color 0.2s ease;
+}
+
+.results-table tr:hover td {
+    background: #f8f9fa;
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.status-success {
+    background: #27ae60;
+}
+
+.status-warning {
+    background: #f39c12;
+}
+
+.status-error {
+    background: #e74c3c;
+}
+
+/* Enhanced form styling */
+.form-section {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.form-section h2 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-size: 1.6rem;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 15px;
+}
+
+/* Input focus effects */
+.input-group input:focus, 
+.input-group select:focus, 
+.input-group textarea:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(52, 152, 219, 0.15);
+}
