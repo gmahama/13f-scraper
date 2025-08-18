@@ -87,6 +87,7 @@ class DiscoveryJobStatus(BaseModel):
     completed_at: Optional[datetime] = Field(None, description="Job completion timestamp")
     total_filers_processed: Optional[int] = Field(None, description="Total filers processed")
     total_first_time_filers: Optional[int] = Field(None, description="Total first-time filers found")
+    results: Optional[FirstTimeFilerDiscoveryResponse] = Field(None, description="Discovery results when completed")
 
 
 class Holding(BaseModel):

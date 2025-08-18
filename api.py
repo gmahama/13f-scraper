@@ -446,7 +446,7 @@ async def get_discovery_results(job_id: str):
         )
     
     # Return the stored results
-    if hasattr(job, 'results'):
+    if job.results:
         return job.results
     else:
         raise HTTPException(
