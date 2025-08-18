@@ -22,7 +22,8 @@ import uvicorn
 from logic import ThirteenFProcessor
 from models import (
     ScrapeRequest, ScrapeResponse, FilingSummary, 
-    HealthResponse, ErrorResponse
+    HealthResponse, ErrorResponse, FirstTimeFilerDiscoveryRequest,
+    FirstTimeFilerDiscoveryResponse, DiscoveryJobStatus
 )
 from utils import (
     load_csv_funds, ensure_output_dir, get_latest_quarter,
@@ -64,6 +65,10 @@ templates = Jinja2Templates(directory="templates")
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+# Background job storage (in production, use Redis or database)
+discovery_jobs = {}
+job_counter = 0
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -75,6 +80,12 @@ async def root(request: Request):
 async def demo_page(request: Request):
     """Serve a demo page with sample data."""
     return templates.TemplateResponse("demo.html", {"request": request})
+
+
+@app.get("/discovery", response_class=HTMLResponse)
+async def discovery_page(request: Request):
+    """Serve the first-time filer discovery page."""
+    return templates.TemplateResponse("discovery.html", {"request": request})
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -327,6 +338,195 @@ Two Sigma Investments,0001040279
 Renaissance Technologies,0001029159"""
     
     return {"example_csv": example_content}
+
+
+@app.post("/discover-first-time-filers", response_model=FirstTimeFilerDiscoveryResponse)
+async def discover_first_time_filers(
+    request: FirstTimeFilerDiscoveryRequest,
+    background_tasks: BackgroundTasks
+):
+    """
+    Discover first-time 13F filers for a specific quarter.
+    
+    This endpoint searches through all 13F filers for a quarter and identifies
+    those who have no previous 13F-HR filings.
+    
+    Args:
+        request: Discovery request with quarter and holdings filters
+        background_tasks: Background tasks for async processing
+        
+    Returns:
+        Discovery response with first-time filers or job ID
+    """
+    global job_counter
+    
+    try:
+        # Create a new job
+        job_id = f"discovery_{job_counter}_{int(time.time())}"
+        job_counter += 1
+        
+        # Initialize job status
+        discovery_jobs[job_id] = DiscoveryJobStatus(
+            job_id=job_id,
+            status="pending",
+            message="Job created, starting processing...",
+            progress=0.0
+        )
+        
+        # Start background processing
+        background_tasks.add_task(
+            process_first_time_filer_discovery,
+            job_id,
+            request.quarter,
+            request.min_holdings,
+            request.max_holdings
+        )
+        
+        return FirstTimeFilerDiscoveryResponse(
+            success=True,
+            message="First-time filer discovery started. Use the job ID to check status.",
+            quarter=request.quarter,
+            total_first_time_filers=0,
+            first_time_filers=[],
+            execution_time=0.0,
+            job_id=job_id
+        )
+        
+    except Exception as e:
+        logger.error(f"Error starting first-time filer discovery: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to start discovery: {str(e)}"
+        )
+
+
+@app.get("/discovery-job/{job_id}", response_model=DiscoveryJobStatus)
+async def get_discovery_job_status(job_id: str):
+    """
+    Get the status of a first-time filer discovery job.
+    
+    Args:
+        job_id: Unique job identifier
+        
+    Returns:
+        Job status information
+    """
+    if job_id not in discovery_jobs:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Job {job_id} not found"
+        )
+    
+    return discovery_jobs[job_id]
+
+
+@app.get("/discovery-results/{job_id}", response_model=FirstTimeFilerDiscoveryResponse)
+async def get_discovery_results(job_id: str):
+    """
+    Get the results of a completed first-time filer discovery job.
+    
+    Args:
+        job_id: Unique job identifier
+        
+    Returns:
+        Discovery results
+    """
+    if job_id not in discovery_jobs:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Job {job_id} not found"
+        )
+    
+    job = discovery_jobs[job_id]
+    
+    if job.status != "completed":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job {job_id} is not completed. Current status: {job.status}"
+        )
+    
+    # Return the stored results
+    if hasattr(job, 'results'):
+        return job.results
+    else:
+        raise HTTPException(
+            status_code=500,
+            detail="Job completed but results not found"
+        )
+
+
+async def process_first_time_filer_discovery(
+    job_id: str,
+    quarter: str,
+    min_holdings: Optional[int],
+    max_holdings: Optional[int]
+):
+    """
+    Background task to process first-time filer discovery.
+    
+    Args:
+        job_id: Unique job identifier
+        quarter: Target quarter
+        min_holdings: Minimum holdings filter
+        max_holdings: Maximum holdings filter
+    """
+    try:
+        # Update job status to processing
+        discovery_jobs[job_id].status = "processing"
+        discovery_jobs[job_id].message = "Searching for first-time filers..."
+        discovery_jobs[job_id].progress = 10.0
+        
+        # Create processor
+        processor = ThirteenFProcessor()
+        
+        # Start discovery
+        start_time = time.time()
+        
+        # Update progress
+        discovery_jobs[job_id].progress = 25.0
+        discovery_jobs[job_id].message = "Analyzing filing history..."
+        
+        # Run discovery
+        first_time_filers = processor.discover_first_time_filers(
+            quarter=quarter,
+            min_holdings=min_holdings,
+            max_holdings=max_holdings
+        )
+        
+        execution_time = time.time() - start_time
+        
+        # Update job status to completed
+        discovery_jobs[job_id].status = "completed"
+        discovery_jobs[job_id].message = f"Discovery completed. Found {len(first_time_filers)} first-time filers."
+        discovery_jobs[job_id].progress = 100.0
+        discovery_jobs[job_id].completed_at = datetime.now()
+        discovery_jobs[job_id].total_filers_processed = len(first_time_filers)  # This would be total processed in real implementation
+        discovery_jobs[job_id].total_first_time_filers = len(first_time_filers)
+        
+        # Store results
+        discovery_jobs[job_id].results = FirstTimeFilerDiscoveryResponse(
+            success=True,
+            message=f"Successfully discovered {len(first_time_filers)} first-time filers",
+            quarter=quarter,
+            total_first_time_filers=len(first_time_filers),
+            first_time_filers=first_time_filers,
+            execution_time=execution_time
+        )
+        
+        logger.info(f"First-time filer discovery completed for job {job_id}. Found {len(first_time_filers)} filers.")
+        
+    except Exception as e:
+        logger.error(f"Error in first-time filer discovery job {job_id}: {e}")
+        
+        # Update job status to failed
+        discovery_jobs[job_id].status = "failed"
+        discovery_jobs[job_id].message = f"Discovery failed: {str(e)}"
+        discovery_jobs[job_id].completed_at = datetime.now()
+        
+    finally:
+        # Clean up processor
+        if 'processor' in locals():
+            processor.close()
 
 
 @app.exception_handler(Exception)

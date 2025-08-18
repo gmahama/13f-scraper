@@ -32,6 +32,63 @@ class ScrapeRequest(BaseModel):
     between_holdings: Optional[Tuple[int, int]] = Field(None, description="Holdings count range (min, max)")
 
 
+class FirstTimeFilerDiscoveryRequest(BaseModel):
+    """Request model for discovering first-time 13F filers."""
+    
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "quarter": "2025Q2",
+                "min_holdings": 1,
+                "max_holdings": 10000
+            }
+        }
+    )
+    
+    quarter: str = Field(..., description="Quarter to search for first-time filers (e.g., 2025Q2)")
+    min_holdings: Optional[int] = Field(1, description="Minimum number of holdings to include")
+    max_holdings: Optional[int] = Field(None, description="Maximum number of holdings to include")
+
+
+class FirstTimeFiler(BaseModel):
+    """Model for first-time filer data."""
+    
+    fund_name: str = Field(..., description="Name of the fund")
+    cik: str = Field(..., description="CIK identifier")
+    quarter: str = Field(..., description="Filing quarter (e.g., 2025Q2)")
+    num_holdings: int = Field(..., description="Number of distinct holdings")
+    filing_url: str = Field(..., description="URL to the filing")
+    info_table_url: str = Field(..., description="URL to the information table")
+    filing_date: str = Field(..., description="Filing date")
+    accession_number: str = Field(..., description="Filing accession number")
+
+
+class FirstTimeFilerDiscoveryResponse(BaseModel):
+    """Response model for first-time filer discovery."""
+    
+    success: bool = Field(..., description="Whether the discovery was successful")
+    message: str = Field(..., description="Status message")
+    quarter: str = Field(..., description="Quarter searched")
+    total_first_time_filers: int = Field(..., description="Total number of first-time filers found")
+    first_time_filers: List[FirstTimeFiler] = Field(..., description="List of first-time filers")
+    execution_time: float = Field(..., description="Execution time in seconds")
+    timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
+    job_id: Optional[str] = Field(None, description="Background job ID if processing is ongoing")
+
+
+class DiscoveryJobStatus(BaseModel):
+    """Model for discovery job status."""
+    
+    job_id: str = Field(..., description="Unique job identifier")
+    status: str = Field(..., description="Job status (pending, processing, completed, failed)")
+    progress: Optional[float] = Field(None, description="Progress percentage (0-100)")
+    message: str = Field(..., description="Status message")
+    created_at: datetime = Field(default_factory=datetime.now, description="Job creation timestamp")
+    completed_at: Optional[datetime] = Field(None, description="Job completion timestamp")
+    total_filers_processed: Optional[int] = Field(None, description="Total filers processed")
+    total_first_time_filers: Optional[int] = Field(None, description="Total first-time filers found")
+
+
 class Holding(BaseModel):
     """Model for individual holding data."""
     
@@ -46,7 +103,7 @@ class Holding(BaseModel):
     other_managers: Optional[str] = Field(None, description="Other managers")
     voting_authority_sole: int = Field(..., description="Sole voting authority")
     voting_authority_shared: int = Field(..., description="Shared voting authority")
-    voting_authority_none: int = Field(..., description="No voting authority")
+    voting_authority_none: int = Field(None, description="No voting authority")
 
 
 class FilingSummary(BaseModel):

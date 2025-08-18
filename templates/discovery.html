@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First-Time 13F Filer Discovery - 13F Scraper</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .discovery-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .discovery-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .discover-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+        
+        .discover-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .discover-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .job-status {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            transition: width 0.3s ease;
+        }
+        
+        .results-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .results-table th,
+        .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .results-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .export-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+        
+        .export-btn:hover {
+            background: #218838;
+        }
+        
+        .status-pending { color: #ffc107; }
+        .status-processing { color: #007bff; }
+        .status-completed { color: #28a745; }
+        .status-failed { color: #dc3545; }
+        
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h3 {
+            margin: 0 0 10px 0;
+            color: #0056b3;
+        }
+        
+        .info-box p {
+            margin: 0;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="discovery-container">
+        <header class="hero">
+            <h1>🔍 First-Time 13F Filer Discovery</h1>
+            <p>Discover new investment firms filing 13F reports for the first time</p>
+        </header>
+
+        <div class="info-box">
+            <h3>ℹ️ How It Works</h3>
+            <p>This tool searches through all 13F filers for a specific quarter and identifies those who have no previous 13F-HR filings. This helps discover emerging investment firms and new market entrants.</p>
+        </div>
+
+        <div class="discovery-form">
+            <h2>Start Discovery</h2>
+            <form id="discoveryForm">
+                <div class="form-group">
+                    <label for="quarter">Target Quarter:</label>
+                    <select id="quarter" name="quarter" required>
+                        <option value="">Select a quarter</option>
+                        <option value="2025Q2">2025 Q2 (Apr-Jun)</option>
+                        <option value="2025Q1">2025 Q1 (Jan-Mar)</option>
+                        <option value="2024Q4">2024 Q4 (Oct-Dec)</option>
+                        <option value="2024Q3">2024 Q3 (Jul-Sep)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="minHoldings">Minimum Holdings:</label>
+                    <input type="number" id="minHoldings" name="minHoldings" value="1" min="1" placeholder="Minimum number of holdings">
+                </div>
+                
+                <div class="form-group">
+                    <label for="maxHoldings">Maximum Holdings (Optional):</label>
+                    <input type="number" id="maxHoldings" name="maxHoldings" min="1" placeholder="Maximum number of holdings">
+                </div>
+                
+                <button type="submit" class="discover-btn" id="discoverBtn">
+                    🚀 Start Discovery
+                </button>
+            </form>
+        </div>
+
+        <div id="jobStatus" class="job-status" style="display: none;">
+            <h3>Discovery Progress</h3>
+            <div id="statusMessage">Initializing...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+            <div id="progressText">0%</div>
+        </div>
+
+        <div id="resultsContainer" class="results-container" style="display: none;">
+            <h2>Discovery Results</h2>
+            <div id="resultsSummary"></div>
+            <div id="resultsTable"></div>
+            <button class="export-btn" id="exportBtn" onclick="exportToCSV()">
+                📊 Export to CSV
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentJobId = null;
+        let discoveryResults = null;
+        let statusCheckInterval = null;
+
+        document.getElementById('discoveryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const requestData = {
+                quarter: formData.get('quarter'),
+                min_holdings: parseInt(formData.get('minHoldings')) || 1,
+                max_holdings: formData.get('maxHoldings') ? parseInt(formData.get('maxHoldings')) : null
+            };
+
+            try {
+                // Disable form
+                document.getElementById('discoverBtn').disabled = true;
+                document.getElementById('discoverBtn').textContent = '🚀 Starting Discovery...';
+                
+                // Start discovery
+                const response = await fetch('/discover-first-time-filers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success && result.job_id) {
+                    currentJobId = result.job_id;
+                    showJobStatus();
+                    startStatusChecking();
+                } else {
+                    throw new Error('No job ID received');
+                }
+
+            } catch (error) {
+                console.error('Error starting discovery:', error);
+                alert('Error starting discovery: ' + error.message);
+                
+                // Re-enable form
+                document.getElementById('discoverBtn').disabled = false;
+                document.getElementById('discoverBtn').textContent = '🚀 Start Discovery';
+            }
+        });
+
+        function showJobStatus() {
+            document.getElementById('jobStatus').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+        }
+
+        function startStatusChecking() {
+            if (statusCheckInterval) {
+                clearInterval(statusCheckInterval);
+            }
+            
+            statusCheckInterval = setInterval(checkJobStatus, 2000);
+        }
+
+        async function checkJobStatus() {
+            if (!currentJobId) return;
+
+            try {
+                const response = await fetch(`/discovery-job/${currentJobId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const jobStatus = await response.json();
+                updateJobStatus(jobStatus);
+
+                if (jobStatus.status === 'completed') {
+                    clearInterval(statusCheckInterval);
+                    await loadResults();
+                } else if (jobStatus.status === 'failed') {
+                    clearInterval(statusCheckInterval);
+                    alert('Discovery failed: ' + jobStatus.message);
+                    
+                    // Re-enable form
+                    document.getElementById('discoverBtn').disabled = false;
+                    document.getElementById('discoverBtn').textContent = '🚀 Start Discovery';
+                }
+
+            } catch (error) {
+                console.error('Error checking job status:', error);
+            }
+        }
+
+        function updateJobStatus(jobStatus) {
+            const statusMessage = document.getElementById('statusMessage');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+
+            statusMessage.textContent = jobStatus.message;
+            progressFill.style.width = (jobStatus.progress || 0) + '%';
+            progressText.textContent = Math.round(jobStatus.progress || 0) + '%';
+
+            // Update status styling
+            statusMessage.className = `status-${jobStatus.status}`;
+        }
+
+        async function loadResults() {
+            if (!currentJobId) return;
+
+            try {
+                const response = await fetch(`/discovery-results/${currentJobId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const results = await response.json();
+                discoveryResults = results;
+                displayResults(results);
+
+            } catch (error) {
+                console.error('Error loading results:', error);
+                alert('Error loading results: ' + error.message);
+            }
+        }
+
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const resultsSummary = document.getElementById('resultsSummary');
+            const resultsTable = document.getElementById('resultsTable');
+
+            // Show results container
+            resultsContainer.style.display = 'block';
+            document.getElementById('jobStatus').style.display = 'none';
+
+            // Update summary
+            resultsSummary.innerHTML = `
+                <h3>Discovery Complete!</h3>
+                <p><strong>Quarter:</strong> ${results.quarter}</p>
+                <p><strong>Total First-Time Filers Found:</strong> ${results.total_first_time_filers}</p>
+                <p><strong>Execution Time:</strong> ${results.execution_time.toFixed(2)} seconds</p>
+            `;
+
+            // Create results table
+            if (results.first_time_filers && results.first_time_filers.length > 0) {
+                let tableHTML = `
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Fund Name</th>
+                                <th>CIK</th>
+                                <th>Holdings</th>
+                                <th>Filing Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                results.first_time_filers.forEach(filer => {
+                    tableHTML += `
+                        <tr>
+                            <td>${filer.fund_name}</td>
+                            <td>${filer.cik}</td>
+                            <td>${filer.num_holdings}</td>
+                            <td>${filer.filing_date}</td>
+                            <td>
+                                <a href="${filer.filing_url}" target="_blank" class="btn">📄 View Filing</a>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                tableHTML += '</tbody></table>';
+                resultsTable.innerHTML = tableHTML;
+            } else {
+                resultsTable.innerHTML = '<p>No first-time filers found for the specified criteria.</p>';
+            }
+
+            // Re-enable form
+            document.getElementById('discoverBtn').disabled = false;
+            document.getElementById('discoverBtn').textContent = '🚀 Start Discovery';
+        }
+
+        function exportToCSV() {
+            if (!discoveryResults || !discoveryResults.first_time_filers) {
+                alert('No results to export');
+                return;
+            }
+
+            const headers = ['Fund Name', 'CIK', 'Quarter', 'Holdings', 'Filing Date', 'Filing URL'];
+            const csvContent = [
+                headers.join(','),
+                ...discoveryResults.first_time_filers.map(filer => [
+                    `"${filer.fund_name}"`,
+                    filer.cik,
+                    filer.quarter,
+                    filer.num_holdings,
+                    filer.filing_date,
+                    filer.filing_url
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `first_time_filers_${discoveryResults.quarter}_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>
