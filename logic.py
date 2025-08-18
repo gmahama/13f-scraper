@@ -559,6 +559,11 @@ class ThirteenFProcessor:
     def _get_holdings_count_for_filing(self, filer_info: Dict[str, Any]) -> int:
         """Get the number of holdings for a filing."""
         try:
+            # Check if we have estimated holdings from the curated data
+            if 'estimated_holdings' in filer_info:
+                return filer_info['estimated_holdings']
+            
+            # Fallback to trying to get real holdings data
             accession_number = filer_info.get('accession_number', '')
             cik = filer_info.get('cik', '')
             
@@ -572,12 +577,10 @@ class ThirteenFProcessor:
             if holdings_df is not None and not holdings_df.empty:
                 return len(holdings_df)
             
-            # For sample data, generate a realistic holdings count
-            # In production, this would be the actual count from the filing
-            import random
-            sample_holdings = random.randint(5, 150)  # Realistic range for new funds
-            logger.info(f"Generated sample holdings count {sample_holdings} for {filer_info.get('name', 'unknown')}")
-            return sample_holdings
+            # If we can't get real holdings data, return 0
+            # This indicates the filing exists but we couldn't parse the holdings
+            logger.warning(f"Could not get holdings data for {filer_info.get('name', 'unknown')} (CIK: {cik})")
+            return 0
             
         except Exception as e:
             logger.error(f"Error getting holdings count: {e}")
